@@ -1,0 +1,235 @@
+﻿
+@{
+    ViewBag.Title = "Bảng kê xuất nhập tồn";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+<div class="row">
+    <div class="col-lg-12 panel-warning">
+        <div class="content-box-header panel-heading">
+            <div class="panel-title ">@ViewBag.Title</div>
+        </div>
+        <div class="content-box-large box-with-header">
+            <div class="panel-body">
+                <div class="form-group">
+                    <div style="display:table">
+                        <div style="display:table-row">
+                            <div style="display:table-cell">
+                                <div class='input-group date' id='datetimepicker1' style="width:175px; margin-right:4px;">
+                                    <input type='text' class="form-control tb-date1" />
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="display:table-cell">
+                                <div class='input-group date' id='datetimepicker2' style="width:175px; margin-right:4px;">
+                                    <input type='text' class="form-control tb-date2" />
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div style="display:table">
+                        <div style="display:table-row">
+                            <div style="display:table-cell">
+                                @Html.DropDownList("Category", ViewBag.CategorySelectOptions as List<SelectListItem>, "---Loại hàng--", new { @class = "form-control", @style = "width:175px; margin-right:4px;" })
+                            </div>
+                            <div style="display:table-cell">
+                                @Html.DropDownList("Brand", ViewBag.BrandSelectOptions as List<SelectListItem>, "--Thương hiệu---", new { @class = "form-control", @style = "width:175px; margin-right:4px;" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="rpt-exim">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr class="success">
+                                <th rowspan="2" class="text-center">STT</th>
+                                <th rowspan="2" class="text-center">Sản phẩm</th>
+                                <th rowspan="2" class="text-center">ĐVT</th>
+                                <th colspan="2" class="text-center">Tồn đầu kỳ</th>
+                                <th colspan="2" class="text-center">Nhập trong kỳ</th>
+                                <th colspan="2" class="text-center">Xuất trong kỳ</th>
+                                <th colspan="2" class="text-center">Tồn cuối kỳ</th>
+                            </tr>
+                            <tr class="success">
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-center">Giá trị</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-center">Giá trị</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-center">Giá trị</th>
+                                <th class="text-center">Số lượng</th>
+                            </tr>
+                            <tr>
+                                <td colspan="11">Đang nạp...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Styles {
+    <link href="~/Content/bootstrap-dialog/bootstrap-dialog.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="~/Content/bootstrap-dialog/bootstrap-dialog.js"></script>
+    <script src="~/Scripts/moment.min.js"></script>
+    <script src="~/Scripts/bootstrap-datetimepicker.min.js"></script>
+    <script>
+        var g_eximdata;
+
+        $(document).ready(function () {
+            // Register date pickers
+            $('#datetimepicker1').datetimepicker({
+                format: 'DD/MM/YYYY',
+                defaultDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+                showTodayButton: true
+            })
+            $('#datetimepicker2').datetimepicker({
+                format: 'DD/MM/YYYY',
+                defaultDate: new Date(),
+                showTodayButton: true
+            })
+
+            ajaxLoadEximStat()
+
+            // Events
+            $('#datetimepicker1').on('dp.change', function (e) {
+                ajaxLoadEximStat();
+            })
+
+            $('#datetimepicker2').on('dp.change', function (e) {
+                ajaxLoadEximStat();
+            })
+
+            $('#Category').on('change', function () {
+                ajaxLoadEximStat();
+            })
+
+            $('#Brand').on('change', function () {
+                ajaxLoadEximStat();
+            })
+        })
+
+        // Ajax to get report data
+        function ajaxLoadEximStat() {
+
+            // get filter params
+            var d1 = formatDateVN($('#datetimepicker1').data("DateTimePicker").date().toDate()).replace(new RegExp('-', 'g'), '/');
+            var d2 = formatDateVN($('#datetimepicker2').data("DateTimePicker").date().toDate()).replace(new RegExp('-', 'g'), '/');
+            var cat = $('#Category').val();
+            var brand = $('#Brand').val();
+
+            // show loading status
+            $(".rpt-exim").html('<p><img src="/Content/images/ajax-loader.gif"> Đang nạp...</p>');
+
+            // get imports
+            $.ajax({
+                url: '/Dashboard/GetEximStat/?date1=' + d1 + '&date2=' + d2 + '&cat=' + cat + '&brand=' + brand,
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data.Success == true) {
+                        g_eximdata = data.EximData;
+                        showEximReport(data.EximData);
+                    }
+                    else {
+                        $(".rpt-exim").html('<span class="text-danger">' + data.Message + '</span>');
+                    }
+                },
+                error: function (xhr) {
+                    $(".rpt-exim").html('<span class="text-danger">' + xhr.responseText + '</span>');
+                }
+            });
+        }
+
+
+        function showEximReport(eximReports) {
+            var html = '';
+            var openingStockAmount = 0;
+            var importStockAmount = 0;
+            var exportStockAmount = 0;
+            var closingStockAmount = 0;
+
+            // Generate row header
+            html += '    <table class="table table-bordered table-nonfluid">\r\n';
+            html += '        <tbody>\r\n';
+            html += '            <tr class="success">\r\n';
+            html += '                                <th rowspan="2" class="text-center">STT</th>\r\n';
+            html += '                                <th rowspan="2" class="text-center">Sản phẩm</th>\r\n';
+            html += '                                <th rowspan="2" class="text-center">ĐVT</th>\r\n';
+            html += '                                <th colspan="2" class="text-center">Tồn đầu kỳ</th>\r\n';
+            html += '                                <th colspan="2" class="text-center">Nhập trong kỳ</th>\r\n';
+            html += '                                <th colspan="2" class="text-center">Xuất trong kỳ</th>\r\n';
+            html += '                                <th colspan="2" class="text-center">Tồn cuối kỳ</th>\r\n';
+            html += '                            </tr>\r\n';
+            html += '                            <tr class="success">\r\n';
+            html += '                                <th class="text-nowrap text-center">Số lượng</th>\r\n';
+            html += '                                <th class="text-nowrap text-center">Giá trị</th>\r\n';
+            html += '                                <th class="text-nowrap text-center">Số lượng</th>\r\n';
+            html += '                                <th class="text-nowrap text-center">Giá trị</th>\r\n';
+            html += '                                <th class="text-nowrap text-center">Số lượng</th>\r\n';
+            html += '                                <th class="text-nowrap text-center">Giá trị</th>\r\n';
+            html += '                                <th class="text-nowrap text-center">Số lượng</th>\r\n';
+            html += '                                <th class="text-nowrap text-center">Giá trị</th>\r\n';
+            html += '                            </tr>\r\n';
+            $.each(eximReports, function (index, line) {
+                html += '            <tr>\r\n';
+                html += '                <td class="text-nowrap text-center">' + (index + 1) + '</td>\r\n';
+                html += '                <td>' + line.ProductName + '</td>\r\n';
+                html += '                <td class="text-nowrap">' + line.QuantityPerUnit + '</td>\r\n';
+                html += '                <td class="text-nowrap text-right">' + line.OpeningStockQuantity.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '                <td class="text-nowrap text-right">' + line.OpeningStockAmount.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '                <td class="text-nowrap text-right">' + line.ImportStockQuantity.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '                <td class="text-nowrap text-right">' + line.ImportStockAmount.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '                <td class="text-nowrap text-right">' + line.ExportStockQuantity.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '                <td class="info text-nowrap text-right">' + line.ExportStockAmount.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '                <td class="text-nowrap text-right">' + line.ClosingStockQuantity.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '                <td class="text-nowrap text-right">' + line.ClosingStockAmount.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '            </tr>\r\n';
+
+                openingStockAmount += line.OpeningStockAmount;
+                importStockAmount += line.ImportStockAmount;
+                exportStockAmount += line.ExportStockAmount;
+                closingStockAmount += line.ClosingStockAmount;
+            })
+            if (eximReports.length == 0) {
+                html += '            <tr><td colspan="11">Không có dữ liệu</td></tr>';
+            }
+            else {
+                // append grand total row
+                html += '            <tr class="success">\r\n';
+                html += '                <td class="text-nowrap text-right text-bold" colspan="3">Tổng cộng:</td>\r\n';
+                html += '                <td class="text-nowrap text-right text-bold"></td>\r\n';
+                html += '                <td class="text-nowrap text-right text-bold">' + openingStockAmount.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '                <td class="text-nowrap text-right text-bold"></td>\r\n';
+                html += '                <td class="text-nowrap text-right text-bold">' + importStockAmount.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '                <td class="text-nowrap text-right text-bold"></td>\r\n';
+                html += '                <td class="text-nowrap text-right text-bold">' + exportStockAmount.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '                <td class="text-nowrap text-right text-bold"></td>\r\n';
+                html += '                <td class="text-nowrap text-right text-bold">' + closingStockAmount.format(0, 3, ',', '.') + '</td>\r\n';
+                html += '            </tr>\r\n';
+            }
+            html += '       </tbody>\r\n';
+            html += '    </table>\r\n';
+
+            // Show products
+            $(".rpt-exim").html(html);
+
+            // Setup BS tooltip
+            $('[data-toggle="tooltip"]').tooltip();
+        }
+
+        $('.mnu-dashboard').attr('class', 'submenu mnu-dashboard open');
+    </script>
+}

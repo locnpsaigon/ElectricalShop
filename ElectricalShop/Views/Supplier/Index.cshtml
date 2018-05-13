@@ -1,0 +1,253 @@
+﻿@{
+    ViewBag.Title = "Danh mục nhà cung cấp";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-8 panel-warning">
+        <div class="content-box-header panel-heading">
+            <div class="panel-title ">@ViewBag.Title</div>
+        </div>
+        <div class="content-box-large box-with-header">
+            <div class="panel-body">
+                <div class="form-group form-inline">
+                    <input class="form-control tb-search" placeholder="Từ khóa tra cứu..." type="text" style="width:280px;" />
+                    <input class="btn btn-primary btn-search" value="Tra cứu" type="button" />
+                    <a href="/Supplier/Add" class="btn btn-success"><i class="glyphicon glyphicon-plus"></i></a>
+                </div>
+                <div class="lst-suppliers" style="min-height:200px; margin-top:16px;">
+                    <table class="table table-bordered" style="width:100%;">
+                        <tbody>
+                            <tr class="success">
+                                <th>STT</th>
+                                <th>Nhà cung cấp</th>
+                                <th>Điện thoại</th>
+                                <th>Fax</th>
+                                <th>Email</th>
+                                <th>Website</th>
+                                <th>Thao tác</th>
+                            </tr>
+                            <tr>
+                                <td colspan="7">Đang nạp...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Styles {
+    <link href="~/Content/bootstrap-dialog/bootstrap-dialog.css" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="~/Content/bootstrap-dialog/bootstrap-dialog.js"></script>
+    <script>
+        var g_suppliers;
+        var g_page_index = 1;
+        var g_page_total = 1;
+
+        /* When document was completely loaded, 
+         * show default suppliers list and register UI control's events 
+         */
+        $(document).ready(function () {
+
+            ajaxLoadSuppliers(g_page_index);
+
+            $('.btn-search').click(function () {
+                g_page_index = 1;
+                ajaxLoadSuppliers(g_page_index);
+            })
+        })
+
+        // Ajax to filter suppliers
+        function ajaxLoadSuppliers(page) {
+            $(".lst-brand").html('Loading...');
+            // Show loading status
+            $.ajax({
+                url: '/Supplier/FilterSuppliers/?filterText=' + $('.tb-search').val() + '&page=' + page,
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data.Success == true) {
+
+                        console.debug('dbg', JSON.stringify(data));
+
+                        // Update values
+                        g_page_index = data.PageIndex;
+                        g_page_total = data.PageTotal;
+                        g_suppliers = data.Suppliers;
+
+                        // Show suppliers
+                        showSuppliers(
+                            data.Suppliers,
+                            data.RowCount,
+                            data.PageIndex,
+                            data.PageSize,
+                            data.PageTotal);
+                    }
+                    else {
+                        $(".lst-suppliers").html('<span class="text-danger">' + data.Message + '</span>');
+                    }
+                },
+                error: function (xhr) {
+                    $(".lst-suppliers").html('<span class="text-danger">' + xhr.responseText + '</span>');
+                }
+            });
+        }
+
+        // Show suppliers
+        function showSuppliers(suppliers, totalSuppliers, pageIndex, pageSize, pageTotal) {
+            var html = '';
+            var row_index = (pageIndex - 1) * pageSize;
+            // Generate row header
+            html += '    <table class="table table-bordered table-nonfluid">\r\n';
+            html += '        <tbody>\r\n';
+            html += '            <tr class="alert-success">\r\n';
+            html += '               <th class="text-nowrap text-center">STT</th>\r\n';
+            html += '                <th class="text-nowrap">Nhà cung cấp</th>\r\n';
+            html += '                <th class="text-nowrap">Điện thoại</th>\r\n';
+            html += '                <th class="text-nowrap">Fax</th>\r\n';
+            html += '                <th class="text-nowrap">Email</th>\r\n';
+            html += '                <th class="text-nowrap">Website</th>\r\n';
+            html += '                <th class="text-nowrap">Thao tác</th>\r\n';
+            html += '            </tr>\r\n';
+            $.each(suppliers, function (index, supplier) {
+                row_index++;
+                html += '            <tr>\r\n';
+                html += '                <td class="text-nowrap text-center">' + row_index + '</td>\r\n';
+                html += '                <td class="text-nowrap">' + supplier.SupplierName + '</td>\r\n';
+                html += '                <td class="text-nowrap">' + supplier.Phone + '</td>\r\n';
+                html += '                <td class="text-nowrap">' + supplier.Fax + '</td>\r\n';
+                html += '                <td class="text-nowrap">' + supplier.Email + '</td>\r\n';
+                html += '                <td class="text-nowrap">' + supplier.Website + '</td>\r\n';
+                html += '                <td class="text-nowrap">\r\n';
+                html += '                    <a href="/Supplier/Edit/' + supplier.SupplierId + '" class="btn btn-sm btn-primary"><i class="glyphicon glyphicon-edit"></i></a>\r\n';
+                html += '                    <a href="javascript:void(0)" class="btn btn-sm btn-danger" onclick="ajaxDeleteSupplier(' + supplier.SupplierId + ');"><i class="glyphicon glyphicon-remove"></i></a>\r\n';
+                html += '                </td>\r\n';
+                html += '            </tr>\r\n';
+            })
+            if (suppliers.length == 0) {
+                html += '            <tr><td colspan="7">Không có nhà cung cấp nào nào</td></tr>';
+            }
+            html += '       </tbody>\r\n';
+            html += '    </table>\r\n';
+            // Do paging
+            if (pageTotal > 1) {
+                html += '                    <ul class="pagination pagination-sm no-margin inline" style="margin-top:0px; float:right;">\r\n';
+                html += '                        <li><a href="#" onclick="return prevPage()">«</a></li>\r\n';
+                for (var i = 1; i <= pageTotal; i++) {
+                    if (i == g_page_index) {
+                        html += '                       <li><span class="text-blue">' + i + '</span></li>\r\n';
+                    } else {
+                        html += '                       <li><a href="#" onclick="return ajaxLoadSuppliers(' + i + ')">' + i + '</a></li>\r\n';
+                    }
+                }
+                html += '                        <li><a href="#" onclick="return nextPage()">»</a></li>\r\n';
+                html += '                    </ul>\r\n';
+            }
+
+            // Show suppliers
+            $(".lst-suppliers").html(html);
+        }
+
+        // Go to previous page
+        function prevPage() {
+            if (g_page_index > 1) g_page_index--;
+            ajaxLoadSuppliers(g_page_index);
+        }
+
+        // Go to next page
+        function nextPage() {
+            if (g_page_index < g_page_total) g_page_index++;
+            ajaxLoadSuppliers(g_page_index);
+        }
+
+        // Delete supplier
+        function ajaxDeleteSupplier(id) {
+            // Find deleted brand
+            var deletedSupplier = null;
+            $.each(g_suppliers, function (index, supplier) {
+                if (supplier.SupplierId == id) {
+                    deletedSupplier = supplier;
+                    return false; // exit each loop
+                }
+            })
+            // Delete supplier
+            if (deletedSupplier != null) {
+                // Show confirm dialog
+                BootstrapDialog.show({
+                    message: '<span class="text-danger">Bạn chắc chắn muốn xóa nhà cung cấp <b>' + deletedSupplier.SupplierName + '</b>?</span>',
+                    buttons: [{
+                        label: 'Xóa',
+                        cssClass: 'btn-danger btn-sm',
+                        action: function (dialog) {
+                            $.ajax({
+                                url: '/Supplier/Delete/?id=' + deletedSupplier.SupplierId,
+                                type: 'POST',
+                                dataType: 'json',
+                                contentType: 'application/json; charset=utf-8',
+                                success: function (data) {
+                                    if (data.Success == true) {
+                                        ajaxLoadBrands(g_page_index);
+                                    }
+                                    else {
+                                        BootstrapDialog.show({
+                                            title: "Lỗi",
+                                            message: data.Message,
+                                            buttons: [{
+                                                label: "Đóng",
+                                                cssClass: "btn-primary btn-sm",
+                                                action: function (dialog) {
+                                                    dialog.close();
+                                                }
+                                            }]
+                                        });
+                                    }
+                                },
+                                error: function (xhr) {
+                                    BootstrapDialog.show({
+                                        title: "Lỗi",
+                                        message: xhr.responseText,
+                                        buttons: [{
+                                            label: "Đóng",
+                                            cssClass: "btn-primary btn-sm",
+                                            action: function (dialog) {
+                                                dialog.close();
+                                            }
+                                        }]
+                                    });
+                                }
+                            });
+                            dialog.close();
+                        }
+                    }, {
+                        label: 'Đóng',
+                        cssClass: 'btn-primary btn-sm',
+                        action: function (dialog) {
+                            dialog.close();
+                        }
+                    }]
+                })
+            } else {
+                BootstrapDialog.show({
+                    message: '<span class="text-info">Không tìm thấy nhà cung cấp mã #' + id + '</span>',
+                    buttons: [
+                        {
+                            label: 'Đóng',
+                            cssClass: 'btn-primary btn-sm',
+                            action: function (dialog) {
+                                dialog.close();
+                            }
+                        }
+                    ]
+                })
+            }
+        }
+
+        $('.mnu-prod').attr('class', 'submenu mnu-prod open');
+
+    </script>
+}

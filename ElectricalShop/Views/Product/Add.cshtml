@@ -1,0 +1,109 @@
+﻿@model ElectricalShop.Models.Admin.AddProduct
+
+@{
+    ViewBag.Title = "Thêm mặt hàng";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+@using (Html.BeginForm("Add", "Product", null, FormMethod.Post, new { @class = "form-horizontal", @role = "form" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="row">
+        <div class="col-md-8 panel-warning">
+            <div class="content-box-header panel-heading">
+                <div class="panel-title ">@ViewBag.Title</div>
+            </div>
+            <div class="content-box-large box-with-header">
+                <div class="panel-body">
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            @Html.ValidationSummary(true)
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Loại hàng</label>
+                        <div class="col-sm-8">
+                            <div style="display:table;">
+                                <div style="display:table-row;">
+                                    <div style="display:table-cell;">
+                                        @Html.DropDownListFor(model => model.CategoryId, Model.CategorySelectOptions, new { @class = "form-control", @style = "width:160px; margin-right:8px;" })
+                                        @Html.ValidationMessageFor(model => model.CategoryId, "", new { @class = "text-danger" })
+                                    </div>
+                                    <div style="display:table-cell;">
+                                        @Html.DropDownListFor(model => model.BrandId, Model.BrandSelectOptions, new { @class = "form-control", @style = "width:160px; margin-right:8px;" })
+                                        @Html.ValidationMessageFor(model => model.BrandId, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Tên mặt hàng</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.ProductName, new { @class = "form-control", @placeholder = "Tên mặt hàng" })
+                            @Html.ValidationMessageFor(model => model.ProductName, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Mã/SKU</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.SKU, new { @class = "form-control", @placeholder = "Đơn vị lưu kho" })
+                            @Html.ValidationMessageFor(model => model.SKU, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Mô tả mặt hàng</label>
+                        <div class="col-sm-8">
+                            @Html.TextAreaFor(model => model.Description, new { @class = "form-control", @placeholder = "Mô tả chi tiết" })
+                            @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Đơn vị tính</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.QuantityPerUnit, new { @class = "form-control", @placeholder = "Đơn vị tính" })
+                            @Html.ValidationMessageFor(model => model.QuantityPerUnit, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Giá bán</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.Price, new { @class = "form-control money-input text-right", @placeholder = "0" , @style="width:160px;" })
+                            @Html.ValidationMessageFor(model => model.Price, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Giảm giá</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.Discount, new { @class = "form-control money-input text-right", @placeholder = "0", @style = "width:160px;" })
+                            @Html.ValidationMessageFor(model => model.Discount, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-4 col-sm-8">
+                            <button type="submit" class="btn btn-sm btn-success" style="width:100px;">Lưu</button>
+                            <button type="reset" class="btn btn-sm btn-danger" style="width:100px;">Nhập lại</button>
+                            @Html.ActionLink("Trở về", "Index", null, new { @style = "width:100px;", @class = "btn btn-sm btn-primary" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@section Styles {
+}
+@Scripts.Render("~/bundles/jqueryval")
+@section Scripts {
+<script src="~/Scripts/jquery-number/jquery.number.min.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            $('.money-input').number(true, 0);
+        })
+
+        $('.mnu-prod').attr('class', 'submenu mnu-prod open');
+    </script>
+}
+
+
+

@@ -1,0 +1,54 @@
+﻿@model ElectricalShop.Models.Admin.EditRole
+
+@{
+    ViewBag.Title = "Cập nhật chức danh";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+@using (Html.BeginForm("Edit", "Role", null, FormMethod.Post, new { @class = "form-horizontal", @role = "form" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="row">
+        <div class="col-md-8 panel-warning">
+            <div class="content-box-header panel-heading">
+                <div class="panel-title ">@ViewBag.Title</div>
+            </div>
+            <div class="content-box-large box-with-header">
+                <div class="panel-body">
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            @Html.ValidationSummary(true)
+                            @Html.HiddenFor(model => model.RoleId)
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Tên chức danh</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.RoleName, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(model => model.RoleName, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Mô tả chức danh</label>
+                        <div class="col-sm-8">
+                            @Html.TextAreaFor(model => model.Description, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-4 col-sm-8">
+                            <button type="submit" class="btn btn-sm btn-success" style="width:100px;">Lưu</button>
+                            <button type="reset" class="btn btn-sm btn-danger" style="width:100px;">Nhập lại</button>
+                            @Html.ActionLink("Trở về", "Index", null, new { @style = "width:100px;", @class = "btn btn-sm btn-primary" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@Scripts.Render("~/bundles/jqueryval")
+@section Scripts {
+    <script>
+        $('.mnu-sys').attr('class', 'submenu mnu-sys open');
+    </script>
+}

@@ -1,0 +1,168 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon" />
+    <title>@ViewBag.Title - ElectricalShop</title>
+    <meta name="keywords" content="Audio, Tannoy, Amplifiers, Pre/Pow" />
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/scripts")
+    @Scripts.Render("~/bundles/search-scripts")
+    @RenderSection("styles", required: false)
+    <script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
+    <script>$(document).ready(function () { $(".megamenu").megamenu(); });</script>
+</head>
+<body>
+    <div class="banner">
+        <div class="container">
+            <div class="header_top">
+                @*<div class="header_top_left">
+                    <div class="box_11 text-left">
+                        <a href="checkout.html">
+                            <h4>Cart: <span class="simpleCart_total"></span> (<span id="simpleCart_quantity" class="simpleCart_quantity"></span> items)</p><img src="~/Content/images/bag.png" alt="" /><div class="clearfix"> </div></h4>
+                        </a>
+                    </div>
+                    <p class="empty"><a href="javascript:;" class="simpleCart_empty">Empty Cart</a></p>
+                    <div class="clearfix"> </div>
+                </div>*@
+                <div class="header_top_right">
+                    <!-- start search-->
+                    <div class="search-box">
+                        <div id="sb-search" class="sb-search sb-search-open">
+                            <form action="/tra-cuu" method="post" role="form">
+                                <input class="sb-search-input" placeholder="Tra cứu nhanh..." type="search" name="search" id="search">
+                                <input class="sb-search-submit" type="submit" value="">
+                                <span class="sb-icon-search"> </span>
+                            </form>
+                        </div>
+                    </div>
+                    <!----search-scripts---->
+                    <script>
+                        new UISearch(document.getElementById('sb-search'));
+                    </script>
+                    <!----//search-scripts---->
+                    <div class="clearfix"> </div>
+                </div>
+                <div class="clearfix"> </div>
+            </div>
+            <div class="header_bottom">
+                @*<div class="logo">
+                    <h1><a href="index.html"><span class="m_1">W</span>atches</a></h1>
+                </div>*@
+                <div class="menu">
+                    <ul class="megamenu skyblue">
+                        <li><a class="color1" href="/trang-chu">Trang chủ</a></li>
+                        <li><a class="color1" href="/gioi-thieu">Giới thiệu</a></li>
+                        <li><a class="color1" href="/san-pham">Sản phẩm</a></li>
+                        @*<li>
+                            <a class="color2" href="#">Sản phẩm</a>
+                            <div class="megapanel">
+                                <div class="row">
+                                    <div class="col1">
+                                        <div class="h_nav">
+                                            <h4>Nguồn phát</h4>
+                                            <ul>
+                                                <li><a href="men.html">Watches</a></li>
+                                                <li><a href="men.html">watches</a></li>
+                                                <li><a href="men.html">Blazers</a></li>
+                                                <li><a href="men.html">Suits</a></li>
+                                                <li><a href="men.html">Trousers</a></li>
+                                                <li><a href="men.html">Jeans</a></li>
+                                                <li><a href="men.html">Shirts</a></li>
+                                                <li><a href="men.html">Sweatshirts & Hoodies</a></li>
+                                                <li><a href="men.html">Swim Wear</a></li>
+                                                <li><a href="men.html">Accessories</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="col1">
+                                        <div class="h_nav">
+                                            <h4>Amplifiers</h4>
+                                            <ul>
+                                                <li><a href="men.html">Watches</a></li>
+                                                <li><a href="men.html">Outerwear</a></li>
+                                                <li><a href="men.html">Dresses</a></li>
+                                                <li><a href="men.html">Handbags</a></li>
+                                                <li><a href="men.html">Trousers</a></li>
+                                                <li><a href="men.html">Jeans</a></li>
+                                                <li><a href="men.html">T-Shirts</a></li>
+                                                <li><a href="men.html">Shoes</a></li>
+                                                <li><a href="men.html">Coats</a></li>
+                                                <li><a href="men.html">Accessories</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="col2">
+                                        <div class="h_nav">
+                                            <h4>Analog</h4>
+                                            <ul>
+                                                <li class>
+                                                    <div class="p_left">
+                                                        <img src="~/Content/images/p1.jpg" class="img-responsive" alt="" />
+                                                    </div>
+                                                    <div class="p_right">
+                                                        <h4><a href="#">Denim shirt</a></h4>
+                                                        <span class="item-cat"><small><a href="#">watches</a></small></span>
+                                                        <span class="price">29.99 $</span>
+                                                    </div>
+                                                    <div class="clearfix"> </div>
+                                                </li>
+                                                <li>
+                                                    <div class="p_left">
+                                                        <img src="~/Content/images/p2.jpg" class="img-responsive" alt="" />
+                                                    </div>
+                                                    <div class="p_right">
+                                                        <h4><a href="#">Denim shirt</a></h4>
+                                                        <span class="item-cat"><small><a href="#">watches</a></small></span>
+                                                        <span class="price">29.99 $</span>
+                                                    </div>
+                                                    <div class="clearfix"> </div>
+                                                </li>
+                                                <li>
+                                                    <div class="p_left">
+                                                        <img src="~/Content/images/p3.jpg" class="img-responsive" alt="" />
+                                                    </div>
+                                                    <div class="p_right">
+                                                        <h4><a href="#">Denim shirt</a></h4>
+                                                        <span class="item-cat"><small><a href="#">watches</a></small></span>
+                                                        <span class="price">29.99 $</span>
+                                                    </div>
+                                                    <div class="clearfix"> </div>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>*@
+                        <li><a class="color1" href="/danh-gia">Đánh giá</a></li>
+                        <li><a class="color1" href="/kinh-nghiem">Kinh nghiệm</a></li>
+                        <li><a class="color1" href="/khuyen-mai">Khuyến mãi</a></li>
+                        <li><a class="color1" href="/lien-he">Liên hệ</a></li>
+                        <div class="clearfix"> </div>
+                    </ul>
+                </div>
+                <div class="clearfix"> </div>
+            </div>
+        </div>
+    </div>
+    <div class="main">
+        @RenderBody()
+    </div>
+    <div class="footer">
+        <div class="container">
+            <div class="clearfix"></div>
+            <div class="copy">
+                <p> &copy; 2017 ElectricalShop. All Rights Reserved </p>
+                <p>377/24 Cách Mạng Tháng Tám, P.12, Q.10, TP.HCM</p>
+                <p>Điện thoại: 0914.380.238 - 0908.318.708 </p>
+            </div>
+        </div>
+    </div>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,331 @@
+﻿@model ElectricalShop.Models.Admin.AddImport
+@using ElectricalShop.Models.DataAccess;
+@{
+    ViewBag.Title = "Nhập kho";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+@using (Html.BeginForm("Import", "Stock", null, FormMethod.Post, new { @role = "form" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="row">
+        <div class="col-lg-12 panel-warning">
+            <div class="content-box-header panel-heading">
+                <div class="panel-title">@ViewBag.Title</div>
+            </div>
+            <div class="content-box-large box-with-header">
+                <div class="panel-body">
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            @Html.ValidationSummary(true)
+                        </div>
+                    </div>
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <div class='input-group date' id='ImportDate' style="width:138px;">
+                                @Html.TextBoxFor(model => model.ImportDate, new { @class = "form-control", @placeholder = "Ngày nhập" })
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </span>
+                            </div>
+                            @Html.ValidationMessageFor(model => model.ImportDate, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="form-group">
+                            @Html.TextBoxFor(model => model.Note, new { @class = "form-control note-input", @placeholder = "Ghi chú", @style = "width: 350px;" })
+                            @Html.ValidationMessageFor(model => model.Note, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <h4>Chi tiết nhập hàng</h4>
+                    <div class="import-details">
+                        @for (int i = 0; i < Model.AddImportRows.Count(); i++)
+                        {
+                            <div class="form-inline">
+                                <div class="form-group">
+                                    @Html.DropDownListFor(model => model.AddImportRows[i].SupplierId, DropDownListOption.GetSupplierOptions(Model.AddImportRows[i].SupplierId), "--Nhà cung cấp--", new { @class = "form-control supplier-select" })
+                                    @Html.ValidationMessageFor(model => model.AddImportRows[i].SupplierId, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="form-group">
+                                    @Html.DropDownListFor(model => model.AddImportRows[i].ProductId, DropDownListOption.GetProductOptions(Model.AddImportRows[i].ProductId), "--Mặt hàng--", new { @class = "form-control product-select" })
+                                    @Html.ValidationMessageFor(model => model.AddImportRows[i].ProductId, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="form-group">
+                                    @Html.EditorFor(model => model.AddImportRows[i].Quantity, new { htmlAttributes = new { @class = "form-control quantity-input" } })
+                                    @Html.ValidationMessageFor(model => model.AddImportRows[i].Quantity, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="form-group">
+                                    @Html.EditorFor(model => model.AddImportRows[i].ImportPrice, new { htmlAttributes = new { @class = "form-control price-input" } })
+                                    @Html.ValidationMessageFor(model => model.AddImportRows[i].ImportPrice, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="form-group">
+                                    <a href="javascript:void(0)" onclick="removeRowAtIndex(@i)" class="btn btn-danger"><i class="glyphicon glyphicon-remove-circle"></i></a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="form-group">
+                        <a href="javascript:void(0)" onclick="appendRow()" class="btn btn-success"><i class="glyphicon glyphicon-plus-sign"></i></a>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" value="Create" class="btn btn-default" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@Scripts.Render("~/bundles/jqueryval")
+@section Styles {
+    <link href="~/Content/bootstrap-dialog/bootstrap-dialog.css" rel="stylesheet" />
+    <link href="~/Content/admin/select2/select2.min.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <style>
+        .form-group {
+            margin-bottom: 4px !important;
+        }
+
+        .note-input {
+            max-width: 710px;
+        }
+
+        .product-select {
+            max-width: 500px !important;
+        }
+
+        .select2-selection--single {
+            height: 34px !important;
+            border: 1px solid #bbb !important;
+            max-width: 500px !important;
+        }
+
+        .quantity-input {
+            width: 100px !important;
+        }
+
+        .price-input {
+            width: 100px !important;
+        }
+
+        @@media (max-width: 1023px) {
+            .form-inline {
+                margin-bottom: 8px;
+            }
+
+            .quantity-input {
+                width: 100% !important;
+            }
+
+            .price-input {
+                width: 100% !important;
+            }
+        }
+    </style>
+}
+@section Scripts {
+    <script src="~/Content/bootstrap-dialog/bootstrap-dialog.js"></script>
+    <script src="~/Scripts/select2/select2.min.js"></script>
+    <script src="~/Scripts/moment.min.js"></script>
+    <script src="~/Scripts/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Scripts/jquery-number/jquery.number.min.js"></script>
+    <script>
+        var g_products;
+        var g_suppliers;
+        var was_products_loaded = false;
+        var was_suppliers_loaded = false;
+
+        $(document).ready(function () {
+            $('#ImportDate').datetimepicker({
+                format: 'DD/MM/YYYY',
+                defaultDate: new Date(),
+                showTodayButton: true
+            })
+            $('.supplier-select').select2();
+            $('.product-select').select2();
+
+            ajaxLoadProducts();
+            ajaxLoadSuppliers();
+        })
+
+        function ajaxLoadProducts() {
+            $.ajax({
+                url: '/Product/GetAllProducts',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data.Success == true) {
+                        g_products = data.Products;
+                        was_products_loaded = true;
+                        if ($('.import-details').children().length == 0) {
+                            appendRow();
+                        }
+                    }
+                    else {
+                        BootstrapDialog.show({
+                            title: 'Lỗi',
+                            message: 'Nạp danh sách sản phẩm thất bại!',
+                            buttons: [{
+                                label: 'Đóng',
+                                cssClass: 'btn-sm btn-danger',
+                                action: function (dialog) {
+                                    dialog.close();
+                                }
+                            }]
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    BootstrapDialog.show({
+                        title: 'Lỗi',
+                        message: 'Nạp danh sách sản phẩm thất bại!',
+                        buttons: [{
+                            label: 'Đóng',
+                            cssClass: 'btn-sm btn-danger',
+                            action: function (dialog) {
+                                dialog.close();
+                            }
+                        }]
+                    });
+                }
+            });
+        }
+
+        function ajaxLoadSuppliers() {
+            $.ajax({
+                url: '/Supplier/GetAllSuppliers',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data.Success == true) {
+                        g_suppliers = data.Suppliers;
+                        was_suppliers_loaded = true;
+                        if ($('.import-details').children().length == 0) {
+                            appendRow();
+                        }
+                    }
+                    else {
+                        BootstrapDialog.show({
+                            title: 'Lỗi',
+                            message: 'Nạp danh sách nhà cung cấp thất bại!',
+                            buttons: [{
+                                label: 'Đóng',
+                                cssClass: 'btn-sm btn-danger',
+                                action: function (dialog) {
+                                    dialog.close();
+                                }
+                            }]
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    BootstrapDialog.show({
+                        title: 'Lỗi',
+                        message: 'Nạp danh sách nhà cung cấp thất bại!',
+                        buttons: [{
+                            label: 'Đóng',
+                            cssClass: 'btn-sm btn-danger',
+                            action: function (dialog) {
+                                dialog.close();
+                            }
+                        }]
+                    });
+                }
+            });
+        }
+
+        function appendRow() {
+            var html = '';
+            var rowIndex = $('.import-details').children().length;
+
+            if (!was_products_loaded || !was_suppliers_loaded) return;
+
+            html += '<div class="form-inline">';
+            html += '   <div class="form-group">';
+            html += '       <select class="form-control supplier-select" data-val="true" data-val-number="The field SupplierId must be a number." data-val-required="Vui lòng chọn sản phẩm" id="AddImportRows_' + rowIndex + '__SupplierId" name="AddImportRows[' + rowIndex + '].SupplierId">';
+            html += '           <option>--Nhà cung cấp--</option>';
+            $.each(g_suppliers, function (index, supplier) {
+                html += '           <option value="' + supplier.SupplierId + '">' + supplier.SupplierName + '</option>';
+            })
+            html += '       </select>';
+            html += '       <span class="field-validation-valid text-danger" data-valmsg-for="AddImportRows[' + rowIndex + '].ProductId" data-valmsg-replace="true"></span>';
+            html += '   </div>';
+            html += '   <div class="form-group">';
+            html += '       <select class="form-control product-select" data-val="true" data-val-number="The field ProductId must be a number." data-val-required="Vui lòng chọn sản phẩm" id="AddImportRows_' + rowIndex + '__ProductId" name="AddImportRows[' + rowIndex + '].ProductId">';
+            html += '           <option>--Sản phẩm--</option>';
+            $.each(g_products, function (index, product) {
+                html += '           <option value="' + product.ProductId + '">' + product.BrandName + ' - ' + product.ProductName + '</option>';
+            })
+            html += '       </select>';
+            html += '       <span class="field-validation-valid text-danger" data-valmsg-for="AddImportRows[' + rowIndex + '].ProductId" data-valmsg-replace="true"></span>';
+            html += '   </div>';
+            html += '   <div class="form-group">';
+            html += '       <input class="form-control quantity-input text-box text-right single-line" id="AddImportRows_' + rowIndex + '__Quantity" name="AddImportRows[' + rowIndex + '].Quantity" placeholder="Số lượng" type="text">';
+            html += '       <span class="field-validation-valid text-danger" data-valmsg-for="AddImportRows[2].Quantity" data-valmsg-replace="true"></span>';
+            html += '   </div>';
+            html += '   <div class="form-group">';
+            html += '       <input class="form-control price-input text-box text-right single-line" id="AddImportRows_' + rowIndex + '__ImportPrice" name="AddImportRows[' + rowIndex + '].ImportPrice" placeholder="Đơn giá"  type="text">';
+            html += '       <span class="field-validation-valid text-danger" data-valmsg-for="AddImportRows[' + rowIndex + '].Price" data-valmsg-replace="true"></span>';
+            html += '   </div>';
+            html += '   <div class="form-group">';
+            html += '       <a href="javascript:void(0)" onclick="removeRowAtIndex(' + rowIndex + ')" class="btn btn-danger"><i class="glyphicon glyphicon-remove-circle"></i></a>';
+            html += '   </div>';
+            html += '</div>';
+            $('.import-details').append(html);
+            $('.supplier-select').select2();
+            $('.product-select').select2();
+            $('.quantity-input').number(true, 0);
+            $('.price-input').number(true, 0);
+        }
+
+        function removeRowAtIndex(index) {
+            if ($('.import-details').children().length > 1) {
+
+                // remove row
+                var rowToRemove = $('.import-details').children().eq(index);
+                if (rowToRemove != undefined) {
+                    rowToRemove.remove();
+                }
+
+                // re-assign child element's attributes
+                var rows = $('.import-details').children();
+                $.each(rows, function (index, row) {
+                    var productSelect = $(row).find('.product-select').eq(0);
+                    var quantityInput = $(row).find('.quantity-input').eq(0);
+                    var priceInput = $(row).find('.price-input').eq(0);
+                    var removeButton = $(row).find('.btn').eq(0);
+
+                    if (productSelect != undefined) {
+                        $(productSelect).attr('id', 'AddImportRows_' + index + '__ProductId');
+                        $(productSelect).attr('name', 'AddImportRows[' + index + '].ProductId');
+                    }
+                    if (quantityInput != undefined) {
+                        $(quantityInput).attr('id', 'AddImportRows_' + index + '__Quantity');
+                        $(quantityInput).attr('name', 'AddImportRows[' + index + '].Quantity');
+                    }
+                    if (priceInput != undefined) {
+                        $(priceInput).attr('id', 'AddImportRows_' + index + '__ImportPrice');
+                        $(priceInput).attr('name', 'AddImportRows[' + index + '].ImportPrice');
+                    }
+                    if (removeButton != undefined) {
+                        $(removeButton).attr('onclick', 'removeRowAtIndex(' + index + ')');
+                    }
+                })
+            }
+            else {
+                BootstrapDialog.show({
+                    title: 'Thông báo',
+                    message: 'Bạn phải nhập ít nhất 1 sản phẩm!',
+                    buttons: [{
+                        label: 'Đóng',
+                        cssClass: 'btn-sm btn-danger',
+                        action: function (dialog) {
+                            dialog.close();
+                        }
+                    }]
+                });
+            }
+        }
+
+        $('.mnu-stock').attr('class', 'submenu mnu-stock open');
+    </script>
+}

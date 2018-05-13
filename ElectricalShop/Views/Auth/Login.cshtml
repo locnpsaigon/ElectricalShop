@@ -1,0 +1,71 @@
+﻿@model ElectricalShop.Models.Admin.Login
+@{
+    ViewBag.Title = "Đăng nhập";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewBag.Title - ElectricalShop Administration Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+    @Styles.Render("~/Content/css-admin")
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/scripts-admin")
+</head>
+<body class="login-bg">
+    <div class="header">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <!-- Logo -->
+                    <div class="logo text-center">
+                        <h1><a href="index.html">ElectricalShop Administration Board</a></h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-content container">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4">
+                <div class="login-wrapper">
+                    <div class="box">
+                        <div class="content-wrap">
+                            @using (Html.BeginForm())
+                            {
+                                @Html.AntiForgeryToken()
+
+                                <div class="form-horizontal">
+                                    <h6 class="text-primary">Đăng nhập</h6>
+                                    @Html.TextBoxFor(model => model.UserName, new { @type = "text", @class = "form-control", @placeholder="Tên đăng nhập" })
+                                    @Html.ValidationMessageFor(model => model.UserName, "", new { @class = "text-danger" })
+
+                                    @Html.TextBoxFor(model => model.Password, new { @type = "password", @class = "form-control", @placeholder = "Mật khẩu" })
+                                    @Html.ValidationMessageFor(model => model.Password, "", new { @class = "text-danger" })
+                                    <div class="action">
+                                        @Html.CheckBoxFor(model => model.RememberMe) Giữ đăng nhập
+                                    </div>
+                                    <div class="action">
+                                        <input type="submit" value="Đăng nhập" class="btn btn-primary signup" />
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @Scripts.Render("~/bundles/jqueryval")
+</body>
+</html>
+

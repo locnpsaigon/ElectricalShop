@@ -1,0 +1,239 @@
+﻿@{
+    ViewBag.Title = "Danh mục chức danh";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+<div class="row">
+    <div class="col-md-8 panel-warning">
+        <div class="content-box-header panel-heading">
+            <div class="panel-title ">@ViewBag.Title</div>
+        </div>
+        <div class="content-box-large box-with-header">
+            <div class="panel-body">
+                <div class="form-group form-inline">
+                    <input class="form-control tb-search" placeholder="Từ khóa tra cứu..." type="text" style="width:280px;" />
+                    <input class="btn btn-primary btn-search" value="Tra cứu" type="button" />
+                    <a href="/Role/Add" class="btn btn-success"><i class="glyphicon glyphicon-plus"></i></a>
+                </div>
+                <div class="lst-role">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr class="success">
+                                <th>STT</th>
+                                <th>Chức danh</th>
+                                <th>Mô tả</th>
+                                <th>Thao tác</th>
+                            </tr>
+                            <tr>
+                                <td colspan="4">Đang nạp...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Styles {
+    <link href="~/Content/bootstrap-dialog/bootstrap-dialog.css" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="~/Content/bootstrap-dialog/bootstrap-dialog.js"></script>
+    <script>
+        var g_roles;
+        var g_page_index = 1;
+        var g_page_total = 1;
+
+        $(document).ready(function () {
+
+            ajaxLoadRoles(g_page_index);
+
+            $('.btn-search').click(function () {
+                g_page_index = 1;
+                ajaxLoadRoles(g_page_index);
+            })
+        })
+
+        // Ajax to get roles
+        function ajaxLoadRoles(page) {
+            $(".lst-role").html('Loading...');
+            $.ajax({
+                url: '/Role/FilterRoles/?filterText=' + $('.tb-search').val() + '&page=' + page,
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data.Success == true) {
+
+                        console.debug('dbg', JSON.stringify(data));
+
+                        // Update values
+                        g_page_index = data.PageIndex;
+                        g_page_total = data.PageTotal;
+                        g_roles = data.Roles;
+
+                        // Show roles
+                        showRoles(
+                            data.Roles,
+                            data.RowCount,
+                            data.PageIndex,
+                            data.PageSize,
+                            data.PageTotal);
+                    }
+                    else {
+                        $(".lst-role").html('<span class="text-danger">' + data.Message + '</span>');
+                    }
+                },
+                error: function (xhr) {
+                    $(".lst-role").html('<span class="text-danger">' + xhr.responseText + '</span>');
+                }
+            });
+        }
+
+        // Show roles list
+        function showRoles(roles, totalRoles, pageIndex, pageSize, pageTotal) {
+            var html = '';
+            var row_index = (pageIndex - 1) * pageSize;
+            // Generate row header
+            html += '    <table class="table table-bordered table-nonfluid" style="width:100%;">\r\n';
+            html += '        <tbody>\r\n';
+            html += '            <tr class="alert-success">\r\n';
+            html += '               <th class="text-nowrap text-center">STT</th>\r\n';
+            html += '                <th class="text-nowrap">Chức danh</th>\r\n';
+            html += '                <th class="text-nowrap">Mô tả</th>\r\n';
+            html += '                <th class="text-nowrap">Thao tác</th>\r\n';
+            html += '            </tr>\r\n';
+            $.each(roles, function (index, role) {
+                row_index++;
+                html += '            <tr>\r\n';
+                html += '                <td class="text-nowrap text-center">' + row_index + '</td>\r\n';
+                html += '                <td class="text-nowrap">' + role.RoleName + '</td>\r\n';
+                html += '                <td class="text-nowrap">' + role.Description + '</td>\r\n';
+                html += '                <td class="text-nowrap">\r\n';
+                html += '                    <a href="/Role/Edit/' + role.RoleId + '" class="btn btn-sm btn-primary"><i class="glyphicon glyphicon-edit"></i></a>\r\n';
+                html += '                    <a href="javascript:void(0)" class="btn btn-sm btn-danger" onclick="ajaxDeleteRole(' + role.RoleId + ');"><i class="glyphicon glyphicon-remove"></i></a>\r\n';
+                html += '                </td>\r\n';
+                html += '            </tr>\r\n';
+            })
+            if (roles.length == 0) {
+                html += '            <tr><td colspan="4">Không có chức danh nào</td></tr>';
+            }
+            html += '       </tbody>\r\n';
+            html += '    </table>\r\n';
+            // Do paging
+            if (pageTotal > 1) {
+                html += '                    <ul class="pagination pagination-sm no-margin inline" style="margin-top:0px; float:right;">\r\n';
+                html += '                        <li><a href="#" onclick="return prevPage()">«</a></li>\r\n';
+                for (var i = 1; i <= pageTotal; i++) {
+                    if (i == g_page_index) {
+                        html += '                       <li><span class="text-blue">' + i + '</span></li>\r\n';
+                    } else {
+                        html += '                       <li><a href="#" onclick="return ajaxLoadRoles(' + i + ')">' + i + '</a></li>\r\n';
+                    }
+                }
+                html += '                        <li><a href="#" onclick="return nextPage()">»</a></li>\r\n';
+                html += '                    </ul>\r\n';
+            }
+
+            // Show roles
+            $(".lst-role").html(html);
+        }
+
+        // Go to previous page
+        function prevPage() {
+            if (g_page_index > 1) g_page_index--;
+            ajaxLoadRoles(g_page_index);
+        }
+
+        // Go to next page
+        function nextPage() {
+            if (g_page_index < g_page_total) g_page_index++;
+            ajaxLoadRoles(g_page_index);
+        }
+
+        // Delete role
+        function ajaxDeleteRole(id) {
+            // Find deleted role
+            var deletedRole = null;
+            $.each(g_roles, function (index, role) {
+                if (role.RoleId == id) {
+                    deletedRole = role;
+                    return false; // exit each loop
+                }
+            })
+            // Delete role
+            if (deletedRole != null) {
+                // Show confirm dialog
+                BootstrapDialog.show({
+                    message: '<span class="text-danger">Bạn chắc chắn muốn xóa chức danh <b>' + deletedRole.RoleName + '</b>?</span>',
+                    buttons: [{
+                        label: 'Xóa',
+                        cssClass: 'btn-danger btn-sm',
+                        action: function (dialog) {
+                            $.ajax({
+                                url: '/Role/Delete/?id=' + deletedRole.RoleId,
+                                type: 'POST',
+                                dataType: 'json',
+                                contentType: 'application/json; charset=utf-8',
+                                success: function (data) {
+                                    if (data.Success == true) {
+                                        ajaxLoadRoles(g_page_index);
+                                    }
+                                    else {
+                                        BootstrapDialog.show({
+                                            title: "Lỗi",
+                                            message: data.Message,
+                                            buttons: [{
+                                                label: "Đóng",
+                                                cssClass: "btn-primary btn-sm",
+                                                action: function (dialog) {
+                                                    dialog.close();
+                                                }
+                                            }]
+                                        });
+                                    }
+                                },
+                                error: function (xhr) {
+                                    BootstrapDialog.show({
+                                        title: "Lỗi",
+                                        message: xhr.responseText,
+                                        buttons: [{
+                                            label: "Đóng",
+                                            cssClass: "btn-primary btn-sm",
+                                            action: function (dialog) {
+                                                dialog.close();
+                                            }
+                                        }]
+                                    });
+                                }
+                            });
+                            dialog.close();
+                        }
+                    }, {
+                        label: 'Đóng',
+                        cssClass: 'btn-primary btn-sm',
+                        action: function (dialog) {
+                            dialog.close();
+                        }
+                    }]
+                })
+            } else {
+                BootstrapDialog.show({
+                    message: '<span class="text-info">Không tìm thấy chức danh mã #' + id + '</span>',
+                    buttons: [
+                        {
+                            label: 'Đóng',
+                            cssClass: 'btn-primary btn-sm',
+                            action: function (dialog) {
+                                dialog.close();
+                            }
+                        }
+                    ]
+                })
+            }
+        }
+
+        $('.mnu-sys').attr('class', 'submenu mnu-sys open');
+
+    </script>
+}

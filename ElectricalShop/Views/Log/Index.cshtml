@@ -1,0 +1,298 @@
+﻿@{
+    ViewBag.Title = "Tra cứu hoạt động";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-8 panel-warning">
+        <div class="content-box-header panel-heading">
+            <div class="panel-title ">@ViewBag.Title</div>
+        </div>
+        <div class="content-box-large box-with-header">
+            <div class="panel-body">
+                <div class="form-group">
+                    <div style="display:table">
+                        <div style="display:table-row">
+                            <div style="display:table-cell">
+                                <div class='input-group date' id='datetimepicker1' style="width:150px; margin-right:4px;">
+                                    <input type='text' class="form-control tb-date1" />
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="display:table-cell">-</div>
+                            <div style="display:table-cell">
+                                <div class='input-group date' id='datetimepicker2' style="width:150px; margin-left:4px;">
+                                    <input type='text' class="form-control tb-date2" />
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group form-inline">
+                    <input class="form-control tb-search" placeholder="Từ khóa tra cứu..." type="text" style="width:312px;" />
+                    <input class="btn btn-primary btn-search" value="Tra cứu" type="button" style="width:75px" />
+                    <input class="btn btn-danger btn-delete" value="Xóa" type="button" style="width:75px" />
+                </div>
+                <div class="lst-log">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr class="success">
+                                <th>STT</th>
+                                <th>Thời gian</th>
+                                <th>Thao tác</th>
+                                <th>Từ khóa</th>
+                                <th><input type="checkbox" class="chk-all-items"></th>
+                            </tr>
+                            <tr>
+                                <td colspan="5">Đang nạp...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Styles {
+    <link href="~/Content/bootstrap-dialog/bootstrap-dialog.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="~/Content/bootstrap-dialog/bootstrap-dialog.js"></script>
+    <script src="~/Scripts/moment.min.js"></script>
+    <script src="~/Scripts/bootstrap-datetimepicker.min.js"></script>
+    <script>
+        var g_logs;
+        var g_page_index = 1;
+        var g_page_total = 1;
+
+        // Document was fully loaded
+        $(document).ready(function () {
+
+            // Register date pickers
+            $('#datetimepicker1').datetimepicker({
+                format: 'DD/MM/YYYY',
+                defaultDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+                showTodayButton: true
+            })
+            $('#datetimepicker2').datetimepicker({
+                format: 'DD/MM/YYYY',
+                defaultDate: new Date(),
+                showTodayButton: true
+            })
+
+            // Handle events
+            $('#datetimepicker1').on('change', function () {
+                g_page_index = 1;
+                ajaxLoadLogs(g_page_index);
+            })
+
+            $('#datetimepicker2').on('change', function () {
+                g_page_index = 1;
+                ajaxLoadLogs(g_page_index);
+            })
+
+            $('.btn-search').click(function () {
+                g_page_index = 1;
+                ajaxLoadLogs(g_page_index);
+            })
+
+            $('.btn-delete').click(function () {
+                ajaxDeleteLogs();
+            })
+
+            ajaxLoadLogs(g_page_index);
+        })
+
+        // Register selected log item checkboxes events
+        function registerCheckBoxEvents() {
+            $('.chk-all-items').on('change', function (e) {
+                $('.chk-log-item').prop('checked', $(this).prop('checked'))
+            })
+
+            $('.chk-log-item').on('change', function (e) {
+                var allChecked = ($('.chk-log-item:not(:checked)').length == 0);
+                $('.chk-all-items').prop('checked', allChecked);
+            })
+        }
+
+        // Ajax to get logs
+        function ajaxLoadLogs(page) {
+            var filterText = $('.tb-search').val();
+            var d1 = formatDateVN($('#datetimepicker1').data("DateTimePicker").date().toDate()).replace(new RegExp('-', 'g'), '/');
+            var d2 = formatDateVN($('#datetimepicker2').data("DateTimePicker").date().toDate()).replace(new RegExp('-', 'g'), '/');
+            // Show loading status
+            $(".lst-log").html('Loading...');
+            $.ajax({
+                url: '/Log/FilterLogs/?filterText=' + filterText  + '&date1=' + d1 + '&date2=' + d2 + '&page=' + page,
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data.Success == true) {
+
+                        console.debug('dbg', JSON.stringify(data));
+
+                        // Update values
+                        g_page_index = data.PageIndex;
+                        g_page_total = data.PageTotal;
+                        g_logs = data.Logs;
+
+                        // Show logs
+                        showLogs(
+                            data.Logs,
+                            data.RowCount,
+                            data.PageIndex,
+                            data.PageSize,
+                            data.PageTotal);
+                    }
+                    else {
+                        $(".lst-log").html('<span class="text-danger">' + data.Message + '</span>');
+                    }
+                },
+                error: function (xhr) {
+                    $(".lst-log").html('<span class="text-danger">' + xhr.responseText + '</span>');
+                }
+            });
+        }
+
+        // Show logs list
+        function showLogs(logs, totalLogs, pageIndex, pageSize, pageTotal) {
+            var html = '';
+            var row_index = (pageIndex - 1) * pageSize;
+            // Generate row header
+            html += '    <table class="table table-bordered table-nonfluid">\r\n';
+            html += '        <tbody>\r\n';
+            html += '            <tr class="alert-success">\r\n';
+            html += '               <th class="text-nowrap text-center">STT</th>\r\n';
+            html += '                <th class="text-nowrap">Thời gian</th>\r\n';
+            html += '                <th class="text-nowrap">Thao tác</th>\r\n';
+            html += '                <th class="text-nowrap">Từ khóa</th>\r\n';
+            html += '                <th class="text-nowrap">Mô tả</th>\r\n';
+            html += '                <th class="text-nowrap"><input type="checkbox" class="chk-all-items"></th>\r\n';
+            html += '            </tr>\r\n';
+            $.each(logs, function (index, log) {
+                row_index++;
+                var log_date = new Date(log.LogDate.match(/\d+/)[0] * 1);
+                html += '            <tr>\r\n';
+                html += '                <td class="text-nowrap text-center">' + row_index + '</td>\r\n';
+                html += '                <td class="text-nowrap">' + formatDateTimeVN(log_date) + '</td>\r\n';
+                html += '                <td class="text-nowrap">' + log.Action + '</td>\r\n';
+                html += '                <td>' + log.Tags + '</td>\r\n';
+                html += '                <td>' + log.Message + '</td>\r\n';
+                html += '                <td class="text-nowrap"><input type="checkbox" class="chk-log-item" value="' + log.LogId + '"></td>\r\n';
+                html += '            </tr>\r\n';
+            })
+            if (logs.length == 0) {
+                html += '            <tr><td colspan="6">Không có log nào</td></tr>';
+            }
+            html += '       </tbody>\r\n';
+            html += '    </table>\r\n';
+            // Do paging
+            if (pageTotal > 1) {
+                html += '                    <ul class="pagination pagination-sm no-margin inline" style="margin-top:0px; float:right;">\r\n';
+                html += '                        <li><a href="#" onclick="return prevPage()">«</a></li>\r\n';
+                for (var i = 1; i <= pageTotal; i++) {
+                    if (i == g_page_index) {
+                        html += '                       <li><span class="text-blue">' + i + '</span></li>\r\n';
+                    } else {
+                        html += '                       <li><a href="#" onclick="return ajaxLoadLogs(' + i + ')">' + i + '</a></li>\r\n';
+                    }
+                }
+                html += '                        <li><a href="#" onclick="return nextPage()">»</a></li>\r\n';
+                html += '                    </ul>\r\n';
+            }
+
+            // Show logs
+            $(".lst-log").html(html);
+
+            // Register events
+            registerCheckBoxEvents();
+        }
+
+        // Go to previous page
+        function prevPage() {
+            if (g_page_index > 1) g_page_index--;
+            ajaxLoadLogs(g_page_index);
+        }
+
+        // Go to next page
+        function nextPage() {
+            if (g_page_index < g_page_total) g_page_index++;
+            ajaxLoadLogs(g_page_index);
+        }
+
+        // Delete logs
+        function ajaxDeleteLogs() {
+            var checkedIds = '';
+            $('.chk-log-item:checked').each(function () {
+                checkedIds += (checkedIds == '') ? $(this).val() : ',' + $(this).val();
+            });
+            // delete logs
+            if (checkedIds != '') {
+                BootstrapDialog.show({
+                    message: '<span class="text-danger">Bạn chắc chắn muốn xóa logs?</span>',
+                    buttons: [{
+                        label: 'Xóa',
+                        cssClass: 'btn-danger btn-sm',
+                        action: function (dialog) {
+                            $.ajax({
+                                url: '/Log/Delete/?ids=' + checkedIds,
+                                type: 'POST',
+                                dataType: 'json',
+                                contentType: 'application/json; charset=utf-8',
+                                success: function (data) {
+                                    if (data.Success == true) {
+                                        ajaxLoadLogs(g_page_index);
+                                    }
+                                    else {
+                                        BootstrapDialog.show({
+                                            title: "Lỗi",
+                                            message: data.Message,
+                                            buttons: [{
+                                                label: "Đóng",
+                                                cssClass: "btn-primary btn-sm",
+                                                action: function (dialog) {
+                                                    dialog.close();
+                                                }
+                                            }]
+                                        });
+                                    }
+                                },
+                                error: function (xhr) {
+                                    BootstrapDialog.show({
+                                        title: "Lỗi",
+                                        message: xhr.responseText,
+                                        buttons: [{
+                                            label: "Đóng",
+                                            cssClass: "btn-primary btn-sm",
+                                            action: function (dialog) {
+                                                dialog.close();
+                                            }
+                                        }]
+                                    });
+                                }
+                            });
+                            dialog.close();
+                        }
+                    }, {
+                        label: 'Đóng',
+                        cssClass: 'btn-primary btn-sm',
+                        action: function (dialog) {
+                            dialog.close();
+                        }
+                    }]
+                })
+            }
+        }
+
+        $('.mnu-sys').attr('class', 'submenu mnu-sys open');
+
+    </script>
+}

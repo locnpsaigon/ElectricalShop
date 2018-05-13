@@ -1,0 +1,83 @@
+﻿
+/* Styles for basic forms
+-----------------------------------------------------------*/
+fieldset {
+    border: 1px solid #ddd;
+    padding: 0 1.4em 1.4em 1.4em;
+    margin: 0 0 1.5em 0;
+}
+
+legend {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+textarea {
+    min-height: 75px;
+}
+
+.editor-label {
+    margin: 1em 0 0 0;
+}
+
+.editor-field {
+    margin: 0.5em 0 0 0;
+}
+
+.text-bold {
+    font-weight: bold;
+}
+
+.cat-title {
+    font-weight: bold;
+    color: #df0024 !important;
+}
+
+.prd-title {
+    font-size: .975em;
+    font-weight: bold;
+    color: #df0024 !important;
+}
+
+.prd-desc {
+    font-size: 1em;
+    color: #808080;
+}
+
+.prd-table-cell {
+    padding-top: 0.5em;
+    display: table-cell;
+}
+
+.intro-title {
+    color: #E12C39;
+}
+
+.intro-items li {
+    color: #555;
+    line-height: 2.4em;
+}
+
+/* Styles for validation helpers
+-----------------------------------------------------------*/
+.field-validation-error {
+    color: #f00;
+}
+
+.field-validation-valid {
+    display: none;
+}
+
+.input-validation-error {
+    border: 1px solid #f00;
+    background-color: #fee;
+}
+
+.validation-summary-errors {
+    font-weight: bold;
+    color: #f00;
+}
+
+.validation-summary-valid {
+    display: none;
+}

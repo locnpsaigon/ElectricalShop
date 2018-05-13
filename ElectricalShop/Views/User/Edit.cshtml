@@ -1,0 +1,109 @@
+﻿@model ElectricalShop.Models.Admin.EditUser
+
+@{
+    ViewBag.Title = "Cập nhật tài khoản";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+@using (Html.BeginForm("Edit", "User", null, FormMethod.Post, new { @class = "form-horizontal", @role = "form" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="row">
+        <div class="col-md-8 panel-warning">
+            <div class="content-box-header panel-heading">
+                <div class="panel-title ">@ViewBag.Title</div>
+            </div>
+            <div class="content-box-large box-with-header">
+                <div class="panel-body">
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            @Html.ValidationSummary(true)
+                            @Html.HiddenFor(m => m.UserId)
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Tên đăng nhập (*)</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.UserName, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(model => model.UserName, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Mật khẩu (*)</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.Password, new { @class = "form-control", @type = "password" })
+                            @Html.ValidationMessageFor(model => model.Password, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Nhập lại mật khẩu (*)</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.PasswordConfirmed, new { @class = "form-control", @type = "password" })
+                            @Html.ValidationMessageFor(model => model.PasswordConfirmed, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Họ tên (*)</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.FullName, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(model => model.FullName, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Điện thoại</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.Phone, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(model => model.Phone, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Email</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(model => model.Email, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Kích hoạt</label>
+                        <div class="col-sm-8">
+                            @Html.CheckBoxFor(model => model.IsActive)
+                            @Html.ValidationMessageFor(model => model.IsActive, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-4 col-sm-8">
+                            <button type="submit" class="btn btn-success" style="width:100px;">Lưu</button>
+                            <button type="reset" class="btn btn-danger" style="width:100px;">Nhập lại</button>
+                            @Html.ActionLink("Trở về", "Index", null, new { @style = "width:100px;", @class = "btn btn-sm btn-primary" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="content-box-large">
+                <div class="panel-heading">
+                    <div class="panel-title">Chọn chức danh</div>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        @for (int i = 0; i < Model.RoleCheckBoxes.Count; i++)
+                        {
+                            <li>
+                                @Html.HiddenFor(m => m.RoleCheckBoxes[i].RoleId)
+                                @Html.HiddenFor(m => m.RoleCheckBoxes[i].RoleName)
+                                @Html.CheckBoxFor(m => m.RoleCheckBoxes[i].Selected)
+                                @Model.RoleCheckBoxes[i].RoleName
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@Scripts.Render("~/bundles/jqueryval")
+@section Scripts {
+    <script>
+        $('.mnu-sys').attr('class', 'submenu mnu-sys open');
+    </script>
+}

@@ -1,0 +1,273 @@
+﻿
+@{
+    ViewBag.Title = "Nhãn hiệu mặt hàng";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-10 panel-warning">
+        <div class="content-box-header panel-heading">
+            <div class="panel-title ">@ViewBag.Title</div>
+        </div>
+        <div class="content-box-large box-with-header">
+            <div class="panel-body">
+                <div class="form-group">
+                    <a href="/Category/Add" class="btn btn-sm btn-primary" style="width:120px;">Thêm mới</a>
+                </div>
+                <div class="lst-cat">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr class="success">
+                                <th>Tên loại hàng</th>
+                                <th>Mô tả</th>
+                                <th>Thao tác</th>
+                            </tr>
+                            <tr>
+                                <td colspan="3">Đang nạp...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Styles {
+    <link href="~/Content/bootstrap-dialog/bootstrap-dialog.css" rel="stylesheet" />
+    <link href="~/Content/admin/bootstrap-treeview/bootstrap-treeview.min.css" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="~/Content/bootstrap-dialog/bootstrap-dialog.js"></script>
+    <script src="~/Content/admin/bootstrap-treeview/bootstrap-treeview.min.js"></script>
+    <script>
+        var g_categories;
+
+        $(document).ready(function () {
+            ajaxLoadCategories();
+        })
+
+        function ajaxLoadCategories() {
+            $(".lst-cat").html('Loading...');
+            $.ajax({
+                url: '/Category/GetCategoryTree',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data.Success == true) {
+                        g_categories = data.Categories;
+                        showCategories(g_categories);
+                    }
+                    else {
+                        $(".lst-cat").html('<span class="text-danger">' + data.Message + '</span>');
+                    }
+                },
+                error: function (xhr) {
+                    $(".lst-cat").html('<span class="text-danger">' + xhr.responseText + '</span>');
+                }
+            });
+        }
+
+        function showCategories(categories) {
+            var html = '';
+            var row_index = 0;
+            // Generate row header
+            html += '    <table class="table table-bordered table-nonfluid">\r\n';
+            html += '        <tbody>\r\n';
+            html += '            <tr class="alert-success">\r\n';
+            html += '                <th class="text-nowrap">Tên loại hàng</th>\r\n';
+            html += '                <th class="text-nowrap">Mô tả</th>\r\n';
+            html += '                <th class="text-nowrap">Thao tác</th>\r\n';
+            html += '            </tr>\r\n';
+            $.each(categories, function (index, cat) {
+                row_index++;
+                html += '            <tr>\r\n';
+                html += '                <td class="text-nowrap">' + spacer(cat.Level * 8) + cat.CategoryName + '</td>\r\n';
+                html += '                <td>' + cat.Description + '</td>\r\n';
+                html += '                <td class="text-nowrap">\r\n';
+                html += '                    <a href="javascript:void(0)" class="btn btn-sm btn-default" onclick="ajaxMoveCategoryDown(' + cat.CategoryId + ');"><i class="glyphicon glyphicon-circle-arrow-down"></i></a>\r\n';
+                html += '                    <a href="javascript:void(0)" class="btn btn-sm btn-default" onclick="ajaxMoveCategoryUp(' + cat.CategoryId + ');"><i class="glyphicon glyphicon-circle-arrow-up"></i></a>\r\n';
+                html += '                    <a href="/Category/Edit/' + cat.CategoryId + '" class="btn btn-sm btn-primary"><i class="glyphicon glyphicon-edit"></i></a>\r\n';
+                html += '                    <a href="/Category/Add/' + cat.CategoryId + '" class="btn btn-sm btn-success"><i class="glyphicon glyphicon-plus-sign"></i></a>\r\n';
+                html += '                    <a href="javascript:void(0)" class="btn btn-sm btn-danger" onclick="ajaxDeleteCategory(' + cat.CategoryId + ');"><i class="glyphicon glyphicon-remove"></i></a>\r\n';
+                html += '                </td>\r\n';
+                html += '            </tr>\r\n';
+            })
+            if (categories.length == 0) {
+                html += '            <tr><td colspan="3">Không có danh mục nào</td></tr>';
+            }
+            html += '       </tbody>\r\n';
+            html += '    </table>\r\n';
+
+            // Show categories
+            $(".lst-cat").html(html);
+        }
+
+        function ajaxDeleteCategory(id) {
+
+            // Find deleted category
+            var deletedCategory = null;
+            $.each(g_categories, function (index, cat) {
+                if (cat.CategoryId == id) {
+                    deletedCategory = cat;
+                    return false; // exit each loop
+                }
+            })
+
+            // Delete category
+            if (deletedCategory != null) {
+                // Show confirm dialog
+                BootstrapDialog.show({
+                    message: '<span class="text-danger">Bạn chắc chắn muốn xóa loại hàng <b>' + deletedCategory.CategoryName + '</b>?</span>',
+                    buttons: [{
+                        label: 'Xóa',
+                        cssClass: 'btn-danger btn-sm',
+                        action: function (dialog) {
+                            $.ajax({
+                                url: '/Category/Delete/?id=' + deletedCategory.CategoryId,
+                                type: 'POST',
+                                dataType: 'json',
+                                contentType: 'application/json; charset=utf-8',
+                                success: function (data) {
+                                    if (data.Success == true) {
+                                        ajaxLoadCategories();
+                                    }
+                                    else {
+                                        BootstrapDialog.show({
+                                            title: "Lỗi",
+                                            message: data.Message,
+                                            buttons: [{
+                                                label: "Đóng",
+                                                cssClass: "btn-primary btn-sm",
+                                                action: function (dialog) {
+                                                    dialog.close();
+                                                }
+                                            }]
+                                        });
+                                    }
+                                },
+                                error: function (xhr) {
+                                    BootstrapDialog.show({
+                                        title: "Lỗi",
+                                        message: xhr.responseText,
+                                        buttons: [{
+                                            label: "Đóng",
+                                            cssClass: "btn-primary btn-sm",
+                                            action: function (dialog) {
+                                                dialog.close();
+                                            }
+                                        }]
+                                    });
+                                }
+                            });
+                            dialog.close();
+                        }
+                    }, {
+                        label: 'Đóng',
+                        cssClass: 'btn-primary btn-sm',
+                        action: function (dialog) {
+                            dialog.close();
+                        }
+                    }]
+                })
+            } else {
+                BootstrapDialog.show({
+                    message: '<span class="text-info">Không tìm thấy loại hàng mã #' + id + '</span>',
+                    buttons: [
+                        {
+                            label: 'Đóng',
+                            cssClass: 'btn-primary btn-sm',
+                            action: function (dialog) {
+                                dialog.close();
+                            }
+                        }
+                    ]
+                })
+            }
+        }
+
+        function ajaxMoveCategoryUp(id) {
+            $.ajax({
+                url: '/Category/MoveUp/?id=' + id,
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data.Success == true) {
+                        ajaxLoadCategories();
+                    }
+                    else {
+                        BootstrapDialog.show({
+                            title: "Lỗi",
+                            message: data.Message,
+                            buttons: [{
+                                label: "Đóng",
+                                cssClass: "btn-primary btn-sm",
+                                action: function (dialog) {
+                                    dialog.close();
+                                }
+                            }]
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    BootstrapDialog.show({
+                        title: "Lỗi",
+                        message: xhr.responseText,
+                        buttons: [{
+                            label: "Đóng",
+                            cssClass: "btn-primary btn-sm",
+                            action: function (dialog) {
+                                dialog.close();
+                            }
+                        }]
+                    });
+                }
+            });
+        }
+
+        function ajaxMoveCategoryDown(id) {
+            $.ajax({
+                url: '/Category/MoveDown/?id=' + id,
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data.Success == true) {
+                        ajaxLoadCategories();
+                    }
+                    else {
+                        BootstrapDialog.show({
+                            title: "Lỗi",
+                            message: data.Message,
+                            buttons: [{
+                                label: "Đóng",
+                                cssClass: "btn-primary btn-sm",
+                                action: function (dialog) {
+                                    dialog.close();
+                                }
+                            }]
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    BootstrapDialog.show({
+                        title: "Lỗi",
+                        message: xhr.responseText,
+                        buttons: [{
+                            label: "Đóng",
+                            cssClass: "btn-primary btn-sm",
+                            action: function (dialog) {
+                                dialog.close();
+                            }
+                        }]
+                    });
+                }
+            });
+        }
+
+        $('.mnu-prod').attr('class', 'submenu mnu-prod open');
+
+    </script>
+}
